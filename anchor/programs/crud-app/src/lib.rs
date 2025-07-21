@@ -12,3 +12,13 @@ pub mod counter {
 
     
 }
+
+#[account]
+#[derive(InitSpace)]
+pub struct JournalEntryState{
+    pub owner: PubKey  ,
+    #[max_len(50)]
+    pub title: String,
+    #[max_len(1000)]
+    pub message: String ,
+}
