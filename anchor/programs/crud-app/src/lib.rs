@@ -10,9 +10,18 @@ declare_id!("FqzkXZdwYjurnUKetJCAvaUw5WAqbwzU6gZEwydeEfqS");
 pub mod counter {
     use super::*;
     
-    pub fn create_journal_entry (ctx:Context<CreateEntry> , title:String) -> Result(<>)
+    pub fn create_journal_entry (ctx:Context<CreateEntry> , title:String , message:String ) -> Result(<>)
     {
 
+
+        let journal_entry = &mut ctx.accounts.journal_entry;
+        journal_entry.title = title ;
+        journal_entry.message=message;
+        journal_entry.owner= ctx.accounts.owner.key();
+         msg!("Journal Entry Created");
+        msg!("Title: {}", title);
+        msg!("Message: {}", message);
+        Ok(())
     }
 
     
