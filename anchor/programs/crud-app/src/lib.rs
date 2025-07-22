@@ -10,7 +10,7 @@ declare_id!("FqzkXZdwYjurnUKetJCAvaUw5WAqbwzU6gZEwydeEfqS");
 pub mod counter {
     use super::*;
     
-    pub fn create_journal_entry (ctx:Context<CreateEntry> , title:String , message:String ) -> Result(<>)
+    pub fn create_journal_entry (ctx:Context<CreateEntry> , title:String , message:String ,) -> Result<()>
     {
 
 
@@ -24,6 +24,13 @@ pub mod counter {
         Ok(())
     }
 
+    pub fn update_journal_entry (ctx:Context<UpdateEntry> , _title:String , message:String)-> Result<()>{
+        let journal_entry=&mut ctx.accounts.journal_entry;
+        
+        journal_entry.message=message;
+        Ok(())
+    }
+
     
 }
 
@@ -34,21 +41,42 @@ pub struct CreateEntry<'info>{
         init , 
         seeds=[title.as_bytes() , owner.key().as_ref()],
         bump,
-        space:8+JournalEntryState::INIT_SPACE,
+        space:8+JournalEntryState::INIT_SPACE ,
         payer:owner,
     )]
     pub journal_entry: Account<'info , JournalEntryState>,
 
     #[account(mut)]
-    pub owner: Signer<'info>
+    pub owner: Signer<'info>,
     pub system_program: Program<'info , System>,
 
+}
+
+#[derive(Accounts)]
+#[instruction(title:String)]
+pub struct UpdateEntry<'info>{
+
+    #[account(mut,
+    seeds=[title.as_bytes() , owner.key().as_ref()],
+    bump,
+    // "Hey, resize the account journal_entry to this new size."
+    realloc=8+JournalEntryState::INIT_SPACE,
+    // Solana requires someone to pay for the increased space (in lamports).
+    realloc::payer=owner,
+//     //This tells Anchor to zero out the reallocated bytes (clear old data beyond original size).
+// It’s a security best practice to avoid leaking data.
+    realloc::zero=true,
+    )]
+    pub journal_entry:Account<'info , JournalEntryState>,
+    #[account(mut)]
+    pub owner:Signer<'info>,
+    pub system_program:Program<'info , System>,
 }
 
 #[account]
 #[derive(InitSpace)]
 pub struct JournalEntryState{
-    pub owner: PubKey  ,
+    pub owner: Pubkey  ,
     #[max_len(50)]
     pub title: String,
     #[max_len(1000)]
