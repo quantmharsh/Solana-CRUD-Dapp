@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("FqzkXZdwYjurnUKetJCAvaUw5WAqbwzU6gZEwydeEfqS");
+declare_id!("HRLZVy1BHytKGkvAgzxA5GMq295xWMgTsrcTMZSnmp3f");
 
 //NOTE: Smart contract on solana are Stateless .so All of the states are stored inside
 //the Program Account
