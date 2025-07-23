@@ -13,21 +13,27 @@ pub mod counter {
     pub fn create_journal_entry (ctx:Context<CreateEntry> , title:String , message:String ,) -> Result<()>
     {
 
-
+          msg!("Journal Entry Created");
+        msg!("Title: {}", title);
+        msg!("Message: {}", message);
         let journal_entry = &mut ctx.accounts.journal_entry;
         journal_entry.title = title ;
         journal_entry.message=message;
         journal_entry.owner= ctx.accounts.owner.key();
-         msg!("Journal Entry Created");
-        msg!("Title: {}", title);
-        msg!("Message: {}", message);
+       
         Ok(())
     }
 
     pub fn update_journal_entry (ctx:Context<UpdateEntry> , _title:String , message:String)-> Result<()>{
         let journal_entry=&mut ctx.accounts.journal_entry;
+
         
         journal_entry.message=message;
+        Ok(())
+    }
+
+    pub fn delete_journal_entry(_ctx:Context<DeleteEntry> , title:String ) -> Result<()>{
+        msg!("Journal entry titled {} deleted", title);
         Ok(())
     }
 
@@ -41,8 +47,8 @@ pub struct CreateEntry<'info>{
         init , 
         seeds=[title.as_bytes() , owner.key().as_ref()],
         bump,
-        space:8+JournalEntryState::INIT_SPACE ,
-        payer:owner,
+        space=8+JournalEntryState::INIT_SPACE ,
+        payer=owner,
     )]
     pub journal_entry: Account<'info , JournalEntryState>,
 
@@ -71,6 +77,24 @@ pub struct UpdateEntry<'info>{
     #[account(mut)]
     pub owner:Signer<'info>,
     pub system_program:Program<'info , System>,
+}
+
+#[derive(Accounts)]
+#[instruction(title:String)]
+pub struct DeleteEntry<'info>{
+    #[account(
+        mut , 
+        seeds=[title.as_bytes() , owner.key().as_ref()],
+        bump,
+        //this account with particular seed will be closed(or deleted) just by pub key of owner who created it .
+        close=owner,
+
+    )]
+    pub journal_entry:Account<'info,JournalEntryState> ,
+    #[account(mut)]
+    pub owner:Signer<'info> ,
+    pub system_program:Program<'info, System>,
+
 }
 
 #[account]
