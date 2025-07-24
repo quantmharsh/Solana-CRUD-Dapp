@@ -47,7 +47,7 @@ export function useCounterProgram() {
   //     toast.error('Failed to initialize account')
   //   },
   // })
-
+//Mutation fn to create  journal entry
   const  createEntry = useMutation<string , Error , CreateEntryArgs>({
     mutationKey:["journalEntry" , "create" , {
       cluster
@@ -76,7 +76,7 @@ export function useCounterProgram() {
     // initialize,
   }
 }
-
+//used for manipulating the existing accounts on solana  blockchain 
 export function useCounterProgramAccount({ account }: { account: PublicKey }) {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
