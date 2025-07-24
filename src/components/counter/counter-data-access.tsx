@@ -1,6 +1,6 @@
 'use client'
 
-import { getCounterProgram, getCounterProgramId } from '@project/anchor'
+import { getCrudProgram, getCrudProgramId } from '@project/anchor'
 import { useConnection } from '@solana/wallet-adapter-react'
 import { Cluster, Keypair, PublicKey } from '@solana/web3.js'
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -10,17 +10,24 @@ import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../use-transaction-toast'
 import { toast } from 'sonner'
 
+interface CreateEntryArgs{
+  title:string ;
+  message:string;
+  owner:PublicKey;
+}
+
+// using this function to write all  apis where we need to create accounts 
 export function useCounterProgram() {
   const { connection } = useConnection()
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
   const provider = useAnchorProvider()
-  const programId = useMemo(() => getCounterProgramId(cluster.network as Cluster), [cluster])
-  const program = useMemo(() => getCounterProgram(provider, programId), [provider, programId])
+  const programId = useMemo(() => getCrudProgramId(cluster.network as Cluster), [cluster])
+  const program = useMemo(() => getCrudProgram(provider, programId), [provider, programId])
 
   const accounts = useQuery({
     queryKey: ['counter', 'all', { cluster }],
-    queryFn: () => program.account.counter.all(),
+    queryFn: () => program.account.journalEntryState.all(),
   })
 
   const getProgramAccount = useQuery({
@@ -28,17 +35,36 @@ export function useCounterProgram() {
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
-  const initialize = useMutation({
-    mutationKey: ['counter', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ counter: keypair.publicKey }).signers([keypair]).rpc(),
-    onSuccess: async (signature) => {
-      transactionToast(signature)
-      await accounts.refetch()
+  // const initialize = useMutation({
+  //   mutationKey: ['counter', 'initialize', { cluster }],
+  //   mutationFn: (keypair: Keypair) =>
+  //     program.methods.initialize().accounts({ counter: keypair.publicKey }).signers([keypair]).rpc(),
+  //   onSuccess: async (signature) => {
+  //     transactionToast(signature)
+  //     await accounts.refetch()
+  //   },
+  //   onError: () => {
+  //     toast.error('Failed to initialize account')
+  //   },
+  // })
+
+  const  createEntry = useMutation<string , Error , CreateEntryArgs>({
+    mutationKey:["journalEntry" , "create" , {
+      cluster
+    }] ,
+    mutationFn:async({title , message , owner})=>{
+      // just verifying the PDA client-side matches what the program expects — it ensures correctness.
+      const[journalEntryAddress] =await PublicKey.findProgramAddressSync([Buffer.from(title) , owner.toBuffer()] ,
+    programId)
+      return  program.methods.createJournalEntry(title , message).rpc();
     },
-    onError: () => {
-      toast.error('Failed to initialize account')
+    onSuccess:(signature)=>{
+      transactionToast(signature);
+      accounts.refetch();
     },
+    onError:(error)=>{
+      toast.error(`Failed to create journal Entry`)
+    }
   })
 
   return {
@@ -46,7 +72,8 @@ export function useCounterProgram() {
     programId,
     accounts,
     getProgramAccount,
-    initialize,
+    createEntry
+    // initialize,
   }
 }
 
@@ -57,50 +84,13 @@ export function useCounterProgramAccount({ account }: { account: PublicKey }) {
 
   const accountQuery = useQuery({
     queryKey: ['counter', 'fetch', { cluster, account }],
-    queryFn: () => program.account.counter.fetch(account),
+    queryFn: () => program.account.journalEntryState.fetch(account),
   })
 
-  const closeMutation = useMutation({
-    mutationKey: ['counter', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ counter: account }).rpc(),
-    onSuccess: async (tx) => {
-      transactionToast(tx)
-      await accounts.refetch()
-    },
-  })
 
-  const decrementMutation = useMutation({
-    mutationKey: ['counter', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ counter: account }).rpc(),
-    onSuccess: async (tx) => {
-      transactionToast(tx)
-      await accountQuery.refetch()
-    },
-  })
-
-  const incrementMutation = useMutation({
-    mutationKey: ['counter', 'increment', { cluster, account }],
-    mutationFn: () => program.methods.increment().accounts({ counter: account }).rpc(),
-    onSuccess: async (tx) => {
-      transactionToast(tx)
-      await accountQuery.refetch()
-    },
-  })
-
-  const setMutation = useMutation({
-    mutationKey: ['counter', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ counter: account }).rpc(),
-    onSuccess: async (tx) => {
-      transactionToast(tx)
-      await accountQuery.refetch()
-    },
-  })
-
+  
   return {
     accountQuery,
-    closeMutation,
-    decrementMutation,
-    incrementMutation,
-    setMutation,
+    
   }
 }
