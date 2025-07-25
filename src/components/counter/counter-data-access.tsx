@@ -35,18 +35,7 @@ export function useCounterProgram() {
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
-  // const initialize = useMutation({
-  //   mutationKey: ['counter', 'initialize', { cluster }],
-  //   mutationFn: (keypair: Keypair) =>
-  //     program.methods.initialize().accounts({ counter: keypair.publicKey }).signers([keypair]).rpc(),
-  //   onSuccess: async (signature) => {
-  //     transactionToast(signature)
-  //     await accounts.refetch()
-  //   },
-  //   onError: () => {
-  //     toast.error('Failed to initialize account')
-  //   },
-  // })
+
 //Mutation fn to create  journal entry
   const  createEntry = useMutation<string , Error , CreateEntryArgs>({
     mutationKey:["journalEntry" , "create" , {
@@ -73,7 +62,7 @@ export function useCounterProgram() {
     accounts,
     getProgramAccount,
     createEntry
-    // initialize,
+    
   }
 }
 //used for manipulating the existing accounts on solana  blockchain 
