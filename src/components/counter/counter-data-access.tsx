@@ -37,6 +37,7 @@ export function useCounterProgram() {
 
 
 //Mutation fn to create  journal entry
+//Trpc useMutation to update ,create , delete info 
   const  createEntry = useMutation<string , Error , CreateEntryArgs>({
     mutationKey:["journalEntry" , "create" , {
       cluster
@@ -70,7 +71,7 @@ export function useCounterProgramAccount({ account }: { account: PublicKey }) {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
   const { program, accounts } = useCounterProgram()
-
+//Trpc UseQuery to fetch info.
   const accountQuery = useQuery({
     queryKey: ['counter', 'fetch', { cluster, account }],
     queryFn: () => program.account.journalEntryState.fetch(account),
