@@ -21,6 +21,7 @@ export function getCrudProgramId(cluster: Cluster) {
     case 'devnet':
     case 'testnet':
       // This is the program ID for the Counter program on devnet and testnet.
+      //Program id gets updatd when we build and deploy smart contract 
       return new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF')
     case 'mainnet-beta':
     default:
