@@ -48,6 +48,7 @@ export function useCounterProgram() {
     programId)
       return  program.methods.createJournalEntry(title , message).rpc();
     },
+    //sign the transaction
     onSuccess:(signature)=>{
       transactionToast(signature);
       accounts.refetch();
@@ -71,11 +72,42 @@ export function useCounterProgramAccount({ account }: { account: PublicKey }) {
   const { cluster } = useCluster()
   const transactionToast = useTransactionToast()
   const { program, accounts } = useCounterProgram()
+    const programId = useMemo(() => getCrudProgramId(cluster.network as Cluster), [cluster])
 //Trpc UseQuery to fetch info.
   const accountQuery = useQuery({
     queryKey: ['counter', 'fetch', { cluster, account }],
     queryFn: () => program.account.journalEntryState.fetch(account),
   })
+
+
+  const updateEntry =useMutation<string  , Error ,CreateEntryArgs >({
+   mutationKey:["journalEntry" , "update" , {cluster}],
+   mutationFn:async({title , message , owner})=>{
+    const[journalEntryAddress]=await PublicKey.findProgramAddressSync([Buffer.from(title) , owner.toBuffer()],programId);
+
+    return program.methods.updateJournalEntry(title , message).rpc();
+   },
+   onSuccess:(signature)=>{
+ transactionToast(signature);
+ accounts.refetch();
+   },
+   onError:(error)=>{
+    toast.error(`Failed to update journal entry ${error.message}` );
+   },
+  });
+
+  const deleteEntry=useMutation({
+    mutationKey:["journalEntry" ,"deleteEntry",{cluster ,account}],
+    mutationFn:(title:string)=>
+      program.methods.deleteJournalEntry(title).rpc(),
+     onSuccess:(tx)=>{
+      transactionToast(tx);
+      return accounts.refetch();
+     }
+    
+  })
+
+
 
 
   
