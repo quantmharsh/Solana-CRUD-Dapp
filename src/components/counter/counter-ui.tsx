@@ -1,21 +1,66 @@
 'use client'
 
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { useCounterProgram, useCounterProgramAccount } from './counter-data-access'
 import { ellipsify } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { publicKey } from '@coral-xyz/anchor/dist/cjs/utils'
 
+//Card to create journal entry
 export function CounterCreate() {
-  const { initialize } = useCounterProgram()
+ const {createEntry}=useCounterProgram();
+ const{publicKey}=useWallet();
+ const [title , setTitle]=useState("");
+ const[message , setMessage]=useState("");
 
-  return (
-    <Button onClick={() => initialize.mutateAsync(Keypair.generate())} disabled={initialize.isPending}>
-      Create {initialize.isPending && '...'}
-    </Button>
-  )
+ const isFormValid = title.trim()!=="" && message.trim()!=="";
+
+ const handleSubmit=()=>{
+  if(isFormValid && publicKey) {
+    createEntry.mutateAsync({title , message , owner:publicKey}) ;
+  }
+
+ };
+ if(!publicKey)
+ {
+  return<p>
+    Connect Your wallet
+  </p>
+ }
+
+ return (
+  <div>
+    <input
+    placeholder='Title '
+    value={title}
+    onChange={(e)=>setTitle(e.target.value)}
+    className='input input-bordered w-full max-w-xs'
+    />
+    <textarea
+    placeholder='Message'
+    value={message}
+    onChange={(e)=>setMessage(e.target.value)}
+    className='textarea textarea-bordered w-full max-w-xs'
+    />
+    <br/>
+    <button
+    onClick={ handleSubmit}
+    disabled={createEntry.isPending || !isFormValid}
+    className='btn btn-xs lg:btn-md btn-primary'
+     
+    >
+      {createEntry.isPending  ? "Creating..." :"Create Journal "
+       } 
+      </button>
+
+  </div>
+ )
+
+
 }
 
 export function CounterList() {
