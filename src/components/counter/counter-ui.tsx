@@ -8,12 +8,14 @@ import { ellipsify } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { useWallet } from '@solana/wallet-adapter-react'
-import { publicKey } from '@coral-xyz/anchor/dist/cjs/utils'
+
+
+ const{publicKey}=useWallet();
 
 //Card to create journal entry
 export function CounterCreate() {
  const {createEntry}=useCounterProgram();
- const{publicKey}=useWallet();
+
  const [title , setTitle]=useState("");
  const[message , setMessage]=useState("");
 
@@ -97,65 +99,37 @@ export function CounterList() {
 }
 
 function CounterCard({ account }: { account: PublicKey }) {
-  const { accountQuery, incrementMutation, setMutation, decrementMutation, closeMutation } = useCounterProgramAccount({
+  const { accountQuery , updateEntry , deleteEntry} = useCounterProgramAccount({
     account,
-  })
+  });
+ 
+   const[message , setMessage]=useState("");
+   const title = accountQuery.data?.title;
+   const isFormValid= message.trim()!=="";
 
-  const count = useMemo(() => accountQuery.data?.count ?? 0, [accountQuery.data?.count])
+   const handleSubmit=()=>{
+    if(publicKey && isFormValid && title)
+    {
+    updateEntry.mutateAsync({ title , message , owner:publicKey});
+    }
+   };
+   if(!publicKey)
+   {
+    return <p>
+      Connect your wallet 
+    </p>
+   }
 
-  return accountQuery.isLoading ? (
-    <span className="loading loading-spinner loading-lg"></span>
-  ) : (
-    <Card>
-      <CardHeader>
-        <CardTitle>Counter: {count}</CardTitle>
-        <CardDescription>
-          Account: <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-4">
-          <Button
-            variant="outline"
-            onClick={() => incrementMutation.mutateAsync()}
-            disabled={incrementMutation.isPending}
-          >
-            Increment
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              const value = window.prompt('Set value to:', count.toString() ?? '0')
-              if (!value || parseInt(value) === count || isNaN(parseInt(value))) {
-                return
-              }
-              return setMutation.mutateAsync(parseInt(value))
-            }}
-            disabled={setMutation.isPending}
-          >
-            Set
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => decrementMutation.mutateAsync()}
-            disabled={decrementMutation.isPending}
-          >
-            Decrement
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => {
-              if (!window.confirm('Are you sure you want to close this account?')) {
-                return
-              }
-              return closeMutation.mutateAsync()
-            }}
-            disabled={closeMutation.isPending}
-          >
-            Close
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
+   return accountQuery.isLoading?(
+    <span className='loading loading-spinner loading-lg'/>
+   ) :(
+    <div>
+
+    </div>
+   )
+
+ 
+
+
+ 
 }

@@ -113,6 +113,8 @@ export function useCounterProgramAccount({ account }: { account: PublicKey }) {
   
   return {
     accountQuery,
+    updateEntry,
+    deleteEntry
     
   }
 }
