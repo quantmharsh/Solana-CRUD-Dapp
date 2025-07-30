@@ -123,8 +123,37 @@ function CounterCard({ account }: { account: PublicKey }) {
    return accountQuery.isLoading?(
     <span className='loading loading-spinner loading-lg'/>
    ) :(
-    <div>
+    <div className='card card-bordered border-base-300 border-4 text-neutral-content'>
+      <div className='card-body items-center text-center'>
+        <div className='space-y-6'>
+<h2 className='card-title justify-center text-3xl cursor-pointer'
+onClick={()=>accountQuery.refetch()}
+>
+{accountQuery.data?.title}
+</h2>
+<p>
+  {accountQuery.data?.message}
+</p>
+<div className='card-actions justify-around'>
+<textarea
+ placeholder='update message here'
+ value={message}
+ onChange={(e)=>setMessage(e.target.value)}
+ className='textarea textarea-bordered w-full max-w-xs'
+/>
 
+<button
+className='btn btn-xs lg:btn-md btn-primary'
+onClick={handleSubmit}
+disabled={updateEntry.isPending || !isFormValid}
+>
+{updateEntry.isPending  ?"Updating...":"Update Journal Entry"}
+</button>
+</div>
+        </div>
+
+      </div>
+      
     </div>
    )
 
