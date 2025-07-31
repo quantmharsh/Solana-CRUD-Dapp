@@ -89,7 +89,7 @@ pub struct DeleteEntry<'info>{
         //this account with particular seed will be closed(or deleted) just by pub key of owner who created it .
         close=owner,
 
-    )]
+    )] 
     pub journal_entry:Account<'info,JournalEntryState> ,
     #[account(mut)]
     pub owner:Signer<'info> ,
